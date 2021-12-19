@@ -4,10 +4,10 @@ import math
 import game
 from agents import Agent
 
+
 # Example agent, behaves randomly.
 # ONLY StudentAgent and his descendants have a 0 id. ONLY one agent of this type must be present in a game.
 # Agents from bots.py have successive ids in a range from 1 to number_of_bots.
-
 
 
 class StudentAgent(Agent):
@@ -87,11 +87,8 @@ class MinimaxAgent(StudentAgent):
 
     def get_next_action(self, state, max_levels):
         move, action = self.minimax(state, max_levels, self.playerMax, None)
-        # print(action)
-        # print(state.get_opponent_id())
-        # print(move)
         return action
-    
+
 
 class MinimaxABAgent(StudentAgent):
     playerMax = True
@@ -161,11 +158,60 @@ class MinimaxABAgent(StudentAgent):
 
 
 class ExpectAgent(StudentAgent):
+    playerMax = 0
+    chance = 1
+
+    def expectimax(self, state, max_levels, player, previous_action):
+
+        my_actions = self.get_legal_actions(state)
+        opponents_actions = self.get_legal_actions_opponent(state)
+
+        if player == self.playerMax:
+            if len(my_actions) == 0:
+                return -1, None
+
+        if player == self.chance:
+            if len(opponents_actions) == 0:
+                return 1, None
+
+        if max_levels == 0:
+            # ret_score = math.inf if player == self.playerMin else -math.inf
+            ret_score = -math.inf
+            return ret_score, previous_action
+
+        if player == self.playerMax:
+            actions = my_actions
+
+        elif player == self.chance:
+            actions = opponents_actions
+
+        if player == self.playerMax:
+            score = -math.inf
+            best_action = None
+            for action in actions:
+                new_state = state.apply_action(self.id, action)
+                new_score, _ = self.expectimax(new_state, max_levels - 1, self.chance,
+                                               action)
+                if new_score > score or best_action is None:
+                    best_action = action
+                    score = new_score
+
+            return score, best_action
+
+        if player == self.chance:
+            score = 0
+            prob = 1 / len(actions)
+            for action in actions:
+                new_state = state.apply_action(self.chance, action)
+                new_score, _ = self.expectimax(new_state, max_levels - 1, self.playerMax,
+                                               action)
+                score += new_score * prob
+
+            return score, None
 
     def get_next_action(self, state, max_levels):
-        pass
-
-
+        move, action = self.expectimax(state, max_levels, self.playerMax, None)
+        return action
 
 
 class MaxNAgent(StudentAgent):
@@ -174,8 +220,8 @@ class MaxNAgent(StudentAgent):
 
         actions = state.get_legal_actions(player)
 
-        if len(actions) ==0:
-            state.agents[player].active=False
+        if len(actions) == 0:
+            state.agents[player].active = False
         else:
             only_me_active = True
             for i in range(0, len(state.agents)):
@@ -188,15 +234,15 @@ class MaxNAgent(StudentAgent):
                 return 1, previous_action
 
         if max_levels == 0:
-            ret_score = math.inf if player == self.playerMin else -math.inf
+            ret_score = -math.inf
             return ret_score, previous_action
 
         score = -math.inf
         best_action = None
+
         for action in actions:
-            new_state = state.apply_action(self.id, action)
-            next_player = player + 1
-            for i in range(player + 1, len(state.agents)):
+            new_state = state.apply_action(player, action)
+            for i in range((player + 1) % len(state.agents), len(state.agents)):
                 if state.agents[i].active:
                     next_player = i
                     break
@@ -214,9 +260,9 @@ class MaxNAgent(StudentAgent):
         return score, best_action
 
     def get_next_action(self, state, max_levels):
-        #agent_index = state.agents.index(self)
+        # agent_index = state.agents.index(self)
 
-        agent_index=0
+        agent_index = 0
 
         for i in range(0, len(state.agents)):
             if state.agents[i].id == self.id:
