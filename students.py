@@ -1,11 +1,15 @@
 import random
+import math
 
+import game
 from agents import Agent
-
 
 # Example agent, behaves randomly.
 # ONLY StudentAgent and his descendants have a 0 id. ONLY one agent of this type must be present in a game.
 # Agents from bots.py have successive ids in a range from 1 to number_of_bots.
+
+
+
 class StudentAgent(Agent):
     def __init__(self, position, file_name):
         super().__init__(position, file_name)
@@ -28,15 +32,132 @@ class StudentAgent(Agent):
 
 
 class MinimaxAgent(StudentAgent):
+    playerMax = True
+    playerMin = False
+
+    def minimax(self, state, max_levels, player, previous_action):
+        # print(state)
+        my_actions = self.get_legal_actions(state)
+        opponents_actions = self.get_legal_actions_opponent(state)
+
+        # kraj rekurzije
+
+        if player == self.playerMax:
+            if len(my_actions) == 0:
+                return -1, previous_action
+        if player == self.playerMin:
+            if len(opponents_actions) == 0:
+                return 1, previous_action
+
+        if max_levels == 0:
+            ret_score = math.inf if player == self.playerMin else -math.inf
+            return ret_score, previous_action
+
+        if player == self.playerMax:
+            actions = my_actions
+        elif player == self.playerMin:
+            actions = opponents_actions
+
+        if player == self.playerMax:
+            score = -math.inf
+            best_action = None
+            for action in actions:
+                new_state = state.apply_action(self.id, action)
+                new_score, _ = self.minimax(new_state, max_levels - 1, self.playerMin,
+                                            action)
+                if new_score > score or best_action is None:
+                    best_action = action
+                    score = new_score
+
+            return score, best_action
+
+        if player == self.playerMin:
+            score = +math.inf
+            best_action = None
+            for action in actions:
+                new_state = state.apply_action(1, action)
+
+                new_score, _ = self.minimax(new_state, max_levels - 1, self.playerMax,
+                                            action)
+                if new_score < score or best_action is None:
+                    best_action = action
+                    score = new_score
+
+            return score, best_action
 
     def get_next_action(self, state, max_levels):
-        pass
-
+        move, action = self.minimax(state, max_levels, self.playerMax, None)
+        # print(action)
+        # print(state.get_opponent_id())
+        # print(move)
+        return action
+    
 
 class MinimaxABAgent(StudentAgent):
+    playerMax = True
+    playerMin = False
+
+    def minimax_alpha_beta(self, state, max_levels, player, previous_action, alpha, beta):
+        # print(state)
+        my_actions = self.get_legal_actions(state)
+        opponents_actions = self.get_legal_actions_opponent(state)
+
+        # kraj rekurzije
+
+        if player == self.playerMax:
+            if len(my_actions) == 0:
+                return -1, previous_action
+        if player == self.playerMin:
+            if len(opponents_actions) == 0:
+                return 1, previous_action
+
+        if max_levels == 0:
+            ret_score = math.inf if player == self.playerMin else -math.inf
+            return ret_score, previous_action
+
+        if player == self.playerMax:
+            actions = my_actions
+        elif player == self.playerMin:
+            actions = opponents_actions
+
+        if player == self.playerMax:
+            score = -math.inf
+            best_action = None
+            for action in actions:
+                new_state = state.apply_action(self.id, action)
+                new_score, _ = self.minimax_alpha_beta(new_state, max_levels - 1, self.playerMin,
+                                                       action, alpha, beta)
+                if new_score > score or best_action is None:
+                    best_action = action
+                    score = new_score
+
+                alpha = max(alpha, score)
+                if alpha >= beta:
+                    break
+
+            return score, best_action
+
+        if player == self.playerMin:
+            score = +math.inf
+            best_action = None
+            for action in actions:
+                new_state = state.apply_action(1, action)
+
+                new_score, _ = self.minimax_alpha_beta(new_state, max_levels - 1, self.playerMax,
+                                                       action, alpha, beta)
+                if new_score < score or best_action is None:
+                    best_action = action
+                    score = new_score
+
+                beta = min(beta, score)
+                if alpha >= beta:
+                    break
+
+            return score, best_action
 
     def get_next_action(self, state, max_levels):
-        pass
+        move, action = self.minimax_alpha_beta(state, max_levels, self.playerMax, None, -math.inf, math.inf)
+        return action
 
 
 class ExpectAgent(StudentAgent):
@@ -45,7 +166,52 @@ class ExpectAgent(StudentAgent):
         pass
 
 
+
+
 class MaxNAgent(StudentAgent):
 
+    def maxNAgent(self, state, max_levels, player, previous_action):
+
+        only_me_active = True
+        for i in range(0, len(state.agents)):
+            if i == player:
+                continue
+            if state.agents[i].active:
+                only_me_active = False
+                break
+        if only_me_active:
+            return 1, previous_action
+
+        actions = state.get_legal_actions(player)
+
+        if max_levels == 0:
+            ret_score = math.inf if player == self.playerMin else -math.inf
+            return ret_score, previous_action
+
+        score = -math.inf
+        best_action = None
+        for action in actions:
+            new_state = state.apply_action(self.id, action)
+            next_player = player + 1
+            for i in range(player + 1, len(state.agents)):
+                if state.agents[i].active:
+                    next_player = i
+                    break
+                if i == len(state.agents) - 1:
+                    for i in range(0, player):
+                        if state.agents[i].active:
+                            next_player = i
+                            break
+
+            new_score, _ = self.maxNAgent(new_state, max_levels - 1, next_player, action)
+            if new_score > score or best_action is None:
+                best_action = action
+                score = new_score
+
+        return score, best_action
+
     def get_next_action(self, state, max_levels):
-        pass
+        agent_index = state.agents.index(self)
+
+        move, action = self.maxNAgent(state, max_levels, agent_index, None)
+        return action

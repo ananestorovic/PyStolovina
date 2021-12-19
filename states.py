@@ -7,7 +7,7 @@ from tiles import Hole
 class GameState:
     initial_state = None
 
-    def __init__(self, char_map, agents, last_agent_played_id):
+    def __init__(self, char_map, agents:list, last_agent_played_id):
         self.char_map = char_map
         self.agents = agents
         self.last_agent_played_id = last_agent_played_id
@@ -16,6 +16,15 @@ class GameState:
 
     def __str__(self):
         return '\n'.join([''.join(row) for row in self.char_map])
+
+    def get_opponent_id(self):
+        for j in self.char_map:
+            for i in j:
+                if '0' < i <= '9':
+                    id = i
+        return int(id)
+
+
 
     def adjust_win_loss(self):
         actions_len = [len(self.get_legal_actions(agent_id)) for agent_id in range(len(self.agents))]
@@ -73,3 +82,4 @@ class GameState:
         agent.apply_action(action)
         state.last_agent_played_id = agent_id
         return state
+
