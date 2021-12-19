@@ -59,6 +59,9 @@ class Agent(BaseSprite):
     def get_next_action(self, state, max_levels):
         pass
 
+'''
     def __eq__(self, agent: object) -> bool:
         if isinstance(agent, Agent):
             return agent.id == self.id
+            
+        '''

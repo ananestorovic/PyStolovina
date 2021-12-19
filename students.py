@@ -172,17 +172,20 @@ class MaxNAgent(StudentAgent):
 
     def maxNAgent(self, state, max_levels, player, previous_action):
 
-        only_me_active = True
-        for i in range(0, len(state.agents)):
-            if i == player:
-                continue
-            if state.agents[i].active:
-                only_me_active = False
-                break
-        if only_me_active:
-            return 1, previous_action
-
         actions = state.get_legal_actions(player)
+
+        if len(actions) ==0:
+            state.agents[player].active=False
+        else:
+            only_me_active = True
+            for i in range(0, len(state.agents)):
+                if i == player:
+                    continue
+                if state.agents[i].active:
+                    only_me_active = False
+                    break
+            if only_me_active:
+                return 1, previous_action
 
         if max_levels == 0:
             ret_score = math.inf if player == self.playerMin else -math.inf
@@ -211,7 +214,14 @@ class MaxNAgent(StudentAgent):
         return score, best_action
 
     def get_next_action(self, state, max_levels):
-        agent_index = state.agents.index(self)
+        #agent_index = state.agents.index(self)
+
+        agent_index=0
+
+        for i in range(0, len(state.agents)):
+            if state.agents[i].id == self.id:
+                agent_index = i
+                break
 
         move, action = self.maxNAgent(state, max_levels, agent_index, None)
         return action
