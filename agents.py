@@ -41,8 +41,7 @@ class Agent(BaseSprite):
     def get_legal_actions(self, state):
         return state.get_legal_actions(self.id)
 
-    def get_legal_actions_opponent(self, state):
-        id = 1
+    def get_legal_actions_opponent(self, state, id):
         return state.get_legal_actions(id)
 
     def get_last_action(self):
@@ -59,9 +58,3 @@ class Agent(BaseSprite):
     def get_next_action(self, state, max_levels):
         pass
 
-'''
-    def __eq__(self, agent: object) -> bool:
-        if isinstance(agent, Agent):
-            return agent.id == self.id
-            
-        '''

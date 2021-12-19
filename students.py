@@ -32,38 +32,41 @@ class StudentAgent(Agent):
 
 
 class MinimaxAgent(StudentAgent):
-    playerMax = True
-    playerMin = False
 
     def minimax(self, state, max_levels, player, previous_action):
-        # print(state)
+
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        playerMax = id_leg
+        playerMin = 1 - id_leg
+
+
         my_actions = self.get_legal_actions(state)
-        opponents_actions = self.get_legal_actions_opponent(state)
+        opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
 
-        # kraj rekurzije
+        if player == playerMax:
+            if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
+                return -(len(opponents_actions) - len(my_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+        if player == playerMin:
+            if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):  #
+                return -(len(opponents_actions) - len(my_actions)), previous_action
 
-        if player == self.playerMax:
-            if len(my_actions) == 0:
-                return -1, previous_action
-        if player == self.playerMin:
-            if len(opponents_actions) == 0:
-                return 1, previous_action
-
-        if max_levels == 0:
-            ret_score = math.inf if player == self.playerMin else -math.inf
-            return ret_score, previous_action
-
-        if player == self.playerMax:
+        if player == playerMax:
             actions = my_actions
-        elif player == self.playerMin:
+        elif player == playerMin:
             actions = opponents_actions
 
-        if player == self.playerMax:
+        if player == playerMax:
             score = -math.inf
             best_action = None
             for action in actions:
-                new_state = state.apply_action(self.id, action)
-                new_score, _ = self.minimax(new_state, max_levels - 1, self.playerMin,
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.minimax(new_state, max_levels - 1, playerMin,
                                             action)
                 if new_score > score or best_action is None:
                     best_action = action
@@ -71,13 +74,13 @@ class MinimaxAgent(StudentAgent):
 
             return score, best_action
 
-        if player == self.playerMin:
+        if player == playerMin:
             score = +math.inf
             best_action = None
             for action in actions:
-                new_state = state.apply_action(1, action)
+                new_state = state.apply_action(player, action)
 
-                new_score, _ = self.minimax(new_state, max_levels - 1, self.playerMax,
+                new_score, _ = self.minimax(new_state, max_levels - 1, playerMax,
                                             action)
                 if new_score < score or best_action is None:
                     best_action = action
@@ -86,43 +89,81 @@ class MinimaxAgent(StudentAgent):
             return score, best_action
 
     def get_next_action(self, state, max_levels):
-        move, action = self.minimax(state, max_levels, self.playerMax, None)
-        return action
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        actions = state.get_legal_actions(id_leg)
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(id_leg, action)
+            score, _ = self.minimax(new_state, max_levels, 1 - id_leg, None)
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score != -1:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
 
 
 class MinimaxABAgent(StudentAgent):
-    playerMax = True
-    playerMin = False
 
     def minimax_alpha_beta(self, state, max_levels, player, previous_action, alpha, beta):
-        # print(state)
+
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        playerMax= id_leg
+        playerMin= 1-id_leg
+
         my_actions = self.get_legal_actions(state)
-        opponents_actions = self.get_legal_actions_opponent(state)
+        opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
 
-        # kraj rekurzije
 
-        if player == self.playerMax:
-            if len(my_actions) == 0:
-                return -1, previous_action
-        if player == self.playerMin:
-            if len(opponents_actions) == 0:
-                return 1, previous_action
+        if player == playerMax:
+            if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
+                return -(len(opponents_actions) - len(my_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+        if player == playerMin:
+            if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
+                return -(len(opponents_actions) - len(my_actions)), previous_action
 
-        if max_levels == 0:
-            ret_score = math.inf if player == self.playerMin else -math.inf
-            return ret_score, previous_action
 
-        if player == self.playerMax:
+        if player == playerMax:
             actions = my_actions
-        elif player == self.playerMin:
+        elif player == playerMin:
             actions = opponents_actions
 
-        if player == self.playerMax:
+        if player == playerMax:
             score = -math.inf
             best_action = None
             for action in actions:
-                new_state = state.apply_action(self.id, action)
-                new_score, _ = self.minimax_alpha_beta(new_state, max_levels - 1, self.playerMin,
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.minimax_alpha_beta(new_state, max_levels - 1, playerMin,
                                                        action, alpha, beta)
                 if new_score > score or best_action is None:
                     best_action = action
@@ -134,13 +175,14 @@ class MinimaxABAgent(StudentAgent):
 
             return score, best_action
 
-        if player == self.playerMin:
+        if player == playerMin:
             score = +math.inf
             best_action = None
-            for action in actions:
-                new_state = state.apply_action(1, action)
 
-                new_score, _ = self.minimax_alpha_beta(new_state, max_levels - 1, self.playerMax,
+            for action in actions:
+
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.minimax_alpha_beta(new_state, max_levels - 1, playerMax,
                                                        action, alpha, beta)
                 if new_score < score or best_action is None:
                     best_action = action
@@ -153,8 +195,44 @@ class MinimaxABAgent(StudentAgent):
             return score, best_action
 
     def get_next_action(self, state, max_levels):
-        move, action = self.minimax_alpha_beta(state, max_levels, self.playerMax, None, -math.inf, math.inf)
-        return action
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        actions = state.get_legal_actions(id_leg)
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(id_leg, action)
+            score, _ = self.minimax_alpha_beta(new_state, max_levels-1, 1-id_leg, None, -math.inf, math.inf)
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score != -1:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
+
+    # return action
 
 
 class ExpectAgent(StudentAgent):
