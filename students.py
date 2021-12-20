@@ -236,39 +236,40 @@ class MinimaxABAgent(StudentAgent):
 
 
 class ExpectAgent(StudentAgent):
-    playerMax = 0
-    chance = 1
 
     def expectimax(self, state, max_levels, player, previous_action):
 
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        playerMax = id_leg
+        chance= 1 - id_leg
+
         my_actions = self.get_legal_actions(state)
-        opponents_actions = self.get_legal_actions_opponent(state)
+        opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
 
-        if player == self.playerMax:
-            if len(my_actions) == 0:
-                return -1, None
+        if player == playerMax:
+            if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
+                return -(len(opponents_actions) - len(my_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+        if player == chance:
+            if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
+                return -(len(opponents_actions) - len(my_actions)), previous_action
 
-        if player == self.chance:
-            if len(opponents_actions) == 0:
-                return 1, None
-
-        if max_levels == 0:
-            # ret_score = math.inf if player == self.playerMin else -math.inf
-            ret_score = -math.inf
-            return ret_score, previous_action
-
-        if player == self.playerMax:
+        if player == playerMax:
             actions = my_actions
-
-        elif player == self.chance:
+        elif player == chance:
             actions = opponents_actions
 
-        if player == self.playerMax:
+        if player == playerMax:
             score = -math.inf
             best_action = None
             for action in actions:
-                new_state = state.apply_action(self.id, action)
-                new_score, _ = self.expectimax(new_state, max_levels - 1, self.chance,
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.expectimax(new_state, max_levels - 1, chance,
                                                action)
                 if new_score > score or best_action is None:
                     best_action = action
@@ -276,20 +277,54 @@ class ExpectAgent(StudentAgent):
 
             return score, best_action
 
-        if player == self.chance:
+        if player == chance:
             score = 0
             prob = 1 / len(actions)
             for action in actions:
-                new_state = state.apply_action(self.chance, action)
-                new_score, _ = self.expectimax(new_state, max_levels - 1, self.playerMax,
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.expectimax(new_state, max_levels - 1, playerMax,
                                                action)
                 score += new_score * prob
 
             return score, None
 
     def get_next_action(self, state, max_levels):
-        move, action = self.expectimax(state, max_levels, self.playerMax, None)
-        return action
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        actions = state.get_legal_actions(id_leg)
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(id_leg, action)
+            score, _ = self.expectimax(new_state, max_levels - 1, 1 - id_leg, None)
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score != -1:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
 
 
 class MaxNAgent(StudentAgent):
@@ -297,6 +332,7 @@ class MaxNAgent(StudentAgent):
     def maxNAgent(self, state, max_levels, player, previous_action):
 
         actions = state.get_legal_actions(player)
+
 
         if len(actions) == 0:
             state.agents[player].active = False
@@ -311,9 +347,25 @@ class MaxNAgent(StudentAgent):
             if only_me_active:
                 return 1, previous_action
 
+        actions2 = state.get_legal_actions((player + 1) % len(state.agents))
+        actions3 = state.get_legal_actions((player + 2) % len(state.agents))
+
         if max_levels == 0:
-            ret_score = -math.inf
-            return ret_score, previous_action
+            if len(actions)>= len(actions2) and len(actions)>=len(actions3):
+                if len(actions2)>=len(actions3):
+                    return (len(actions)-len(actions2)), previous_action
+                else:
+                    return (len(actions) - len(actions3)), previous_action
+            elif len(actions)<= len(actions2) and len(actions)>=len(actions3):
+               return (len(actions2)-len(actions)), previous_action
+            elif len(actions) >= len(actions2) and len(actions) <= len(actions3):
+                return (len(actions3) - len(actions)), previous_action
+            elif len(actions) <= len(actions2) and len(actions) <= len(actions3):
+                if len(actions2)>= len(actions3):
+                    return (len(actions2)-len(actions)), previous_action
+                else:
+                    return (len(actions3) - len(actions)), previous_action
+
 
         score = -math.inf
         best_action = None
@@ -340,12 +392,56 @@ class MaxNAgent(StudentAgent):
     def get_next_action(self, state, max_levels):
         # agent_index = state.agents.index(self)
 
-        agent_index = 0
+        agent_index = None
 
         for i in range(0, len(state.agents)):
             if state.agents[i].id == self.id:
                 agent_index = i
                 break
+        actions = state.get_legal_actions(agent_index)
+        # move, action = self.maxNAgent(state, max_levels, agent_index, None)
+        # return action
 
-        move, action = self.maxNAgent(state, max_levels, agent_index, None)
-        return action
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(agent_index, action)
+            for i in range((agent_index + 1) % len(state.agents), len(state.agents)):
+                if state.agents[i].active:
+                    next_player = i
+                    break
+                if i == len(state.agents) - 1:
+                    for i in range(0, agent_index):
+                        if state.agents[i].active:
+                            next_player = i
+                            break
+            score, _ = self.maxNAgent(new_state, max_levels - 1, next_player, None)
+
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score != -1:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
+
