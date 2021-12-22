@@ -47,14 +47,14 @@ class MinimaxAgent(StudentAgent):
 
         if player == playerMax:
             if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
-                return -(len(opponents_actions) - len(my_actions)), previous_action
+                return (len(my_actions) - len(opponents_actions)), previous_action
             elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
                 return (len(my_actions) - len(opponents_actions)), previous_action
         if player == playerMin:
             if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
                 return (len(my_actions) - len(opponents_actions)), previous_action
-            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):  #
-                return -(len(opponents_actions) - len(my_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
 
         if player == playerMax:
             actions = my_actions
@@ -103,7 +103,7 @@ class MinimaxAgent(StudentAgent):
             if maxScore is None or score > maxScore:
                 maxScore = score
                 maxAction = action
-            if score != -1:
+            if score > 0:
                 isAll = False
 
         if not isAll:
@@ -140,17 +140,16 @@ class MinimaxABAgent(StudentAgent):
         my_actions = self.get_legal_actions(state)
         opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
 
-
         if player == playerMax:
             if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
-                return -(len(opponents_actions) - len(my_actions)), previous_action
+                return (len(my_actions) - len(opponents_actions)), previous_action
             elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
                 return (len(my_actions) - len(opponents_actions)), previous_action
         if player == playerMin:
             if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
                 return (len(my_actions) - len(opponents_actions)), previous_action
             elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
-                return -(len(opponents_actions) - len(my_actions)), previous_action
+                return (len(my_actions) - len(opponents_actions)), previous_action
 
 
         if player == playerMax:
@@ -209,7 +208,7 @@ class MinimaxABAgent(StudentAgent):
             if maxScore is None or score > maxScore:
                 maxScore = score
                 maxAction = action
-            if score != -1:
+            if score > 0:
                 isAll = False
 
         if not isAll:
@@ -232,7 +231,6 @@ class MinimaxABAgent(StudentAgent):
             elif "NW " in actions:
                 return "NW "
 
-    # return action
 
 
 class ExpectAgent(StudentAgent):
@@ -245,19 +243,19 @@ class ExpectAgent(StudentAgent):
         playerMax = id_leg
         chance= 1 - id_leg
 
-        my_actions = self.get_legal_actions(state)
+        my_actions = self.get_legal_actions_opponent(state, id_leg)
         opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
 
         if player == playerMax:
             if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
-                return -(len(opponents_actions) - len(my_actions)), previous_action
+                return (len(my_actions) - len(opponents_actions)), previous_action
             elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
                 return (len(my_actions) - len(opponents_actions)), previous_action
         if player == chance:
             if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
                 return (len(my_actions) - len(opponents_actions)), previous_action
             elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
-                return -(len(opponents_actions) - len(my_actions)), previous_action
+                return (len(my_actions) - len(opponents_actions)), previous_action
 
         if player == playerMax:
             actions = my_actions
@@ -303,7 +301,7 @@ class ExpectAgent(StudentAgent):
             if maxScore is None or score > maxScore:
                 maxScore = score
                 maxAction = action
-            if score != -1:
+            if score > 0:
                 isAll = False
 
         if not isAll:
@@ -345,7 +343,7 @@ class MaxNAgent(StudentAgent):
                     only_me_active = False
                     break
             if only_me_active:
-                return 1, previous_action
+                return 1000, previous_action
 
         actions2 = state.get_legal_actions((player + 1) % len(state.agents))
         actions3 = state.get_legal_actions((player + 2) % len(state.agents))
@@ -422,7 +420,7 @@ class MaxNAgent(StudentAgent):
             if maxScore is None or score > maxScore:
                 maxScore = score
                 maxAction = action
-            if score != -1:
+            if score > 0:
                 isAll = False
 
         if not isAll:
@@ -445,3 +443,269 @@ class MaxNAgent(StudentAgent):
             elif "NW " in actions:
                 return "NW "
 
+class NegamaxAgent(StudentAgent):
+    def negamax(self, state, max_levels, player, previous_action):
+
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        playerMax = id_leg
+        playerMin = 1 - id_leg
+
+
+        my_actions = self.get_legal_actions(state)
+        opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
+
+        if player == playerMax:
+            if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+        if player == playerMin:
+            if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):  #
+                return (len(my_actions) - len(opponents_actions)), previous_action
+
+        if player == playerMax:
+            actions = my_actions
+        elif player == playerMin:
+            actions = opponents_actions
+
+
+        score = -math.inf
+        best_action = None
+        for action in actions:
+            new_state = state.apply_action(player, action)
+            new_score, _ = self.negamax(new_state, max_levels - 1, (player+1)%1,
+                                        action)
+            new_score = -new_score
+            if new_score > score or best_action is None:
+                best_action = action
+                score = new_score
+            return score, best_action
+
+
+
+    def get_next_action(self, state, max_levels):
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        actions = state.get_legal_actions(id_leg)
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(id_leg, action)
+            score, _ = self.negamax(new_state, max_levels, 1 - id_leg, None)
+            score=-score
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score > 0:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
+
+class NegamaxABAgent(StudentAgent):
+
+    def negamax_alpha_beta(self, state, max_levels, player, previous_action, alpha, beta):
+
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        playerMax= id_leg
+        playerMin= 1-id_leg
+
+        my_actions = self.get_legal_actions(state)
+        opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
+
+        if player == playerMax:
+            if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+        if player == playerMin:
+            if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+
+
+        if player == playerMax:
+            actions = my_actions
+        elif player == playerMin:
+            actions = opponents_actions
+
+
+        score = -math.inf
+        best_action = None
+        for action in actions:
+            new_state = state.apply_action(player, action)
+            new_score, _ = self.negamax_alpha_beta(new_state, max_levels - 1, (player+1)%1, action, -beta, -alpha)
+            new_score= - new_score
+            if new_score > score or best_action is None:
+                best_action = action
+                score = new_score
+            alpha = max(alpha, score)
+            if alpha >= beta:
+                break
+
+        return score, best_action
+
+
+    def get_next_action(self, state, max_levels):
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        actions = state.get_legal_actions(id_leg)
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(id_leg, action)
+            score, _ = self.negamax_alpha_beta(new_state, max_levels-1, 1-id_leg, None, -math.inf, math.inf)
+            score=-score
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score > 0:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
+
+class NegascoutAgent(StudentAgent):
+
+    def negascout(self, state, max_levels, player, previous_action, alpha, beta):
+
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        playerMax= id_leg
+        playerMin= 1-id_leg
+
+        my_actions = self.get_legal_actions(state)
+        opponents_actions = self.get_legal_actions_opponent(state, 1-id_leg)
+
+        if player == playerMax:
+            if len(my_actions) == 0 or (max_levels == 0 and len(my_actions) <= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) >= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+        if player == playerMin:
+            if len(opponents_actions) == 0 or (max_levels == 0 and len(my_actions) >= len(opponents_actions)):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+            elif max_levels == 0 and len(my_actions) <= len(opponents_actions):
+                return (len(my_actions) - len(opponents_actions)), previous_action
+
+        if player == playerMax:
+            actions = my_actions
+        elif player == playerMin:
+            actions = opponents_actions
+
+        score = -math.inf
+        best_action = None
+        for action in actions:
+            if action == actions[0]:
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.negascout(new_state, max_levels - 1, (player+1)%1,
+                                                       action, -beta, -alpha)
+                new_score=-new_score
+            else:
+                new_state = state.apply_action(player, action)
+                new_score, _ = self.negascout(new_state, max_levels - 1, (player+1)%1,
+                                                       action, -alpha-1, alpha)
+                new_score = -new_score
+
+                if alpha<new_score<beta:
+                    new_score, _ = self.negascout(new_state, max_levels - 1, playerMin,
+                                                           action, -beta, -alpha)
+                    new_score = -new_score
+
+
+            if new_score > score or best_action is None:
+                best_action = action
+                score = new_score
+
+            alpha = max(alpha, score)
+            if alpha >= beta:
+                break
+
+        return score, best_action
+
+    def get_next_action(self, state, max_levels):
+        id_leg = self.id
+        if self.id != 0:
+            id_leg = 1
+        actions = state.get_legal_actions(id_leg)
+        isAll = True
+        maxScore = None
+        maxAction = None
+
+        for action in actions:
+            new_state = state.apply_action(id_leg, action)
+            score, _ = self.negascout(new_state, max_levels, 1-id_leg, None, -math.inf, math.inf)
+            score=-score
+            if maxScore is None or score > maxScore:
+                maxScore = score
+                maxAction = action
+            if score > 0:
+                isAll = False
+
+        if not isAll:
+            return maxAction
+        else:
+            if "NORTH" in actions:
+                return "NORTH"
+            elif "NE" in actions:
+                return "NE"
+            elif "EAST" in actions:
+                return "EAST"
+            elif "SE" in actions:
+                return "SE"
+            elif "SOUTH" in actions:
+                return "SOUTH"
+            elif "SW" in actions:
+                return "SW"
+            elif "WEST" in actions:
+                return "WEST"
+            elif "NW " in actions:
+                return "NW "
